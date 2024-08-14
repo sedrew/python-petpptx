@@ -1,10 +1,58 @@
+from functools import cached_property
 from os import PathLike
-from pathlib import Path
 from typing import Optional
+
+from src.petpptx.app_props import AppProperties
+from src.petpptx.constants import EnumRelationshipType
+from src.petpptx.contet_type import ContentTypes
 from src.petpptx.handler.xml_handler import PptxXmlHandler
-from src.petpptx.builder import create_minimal_presentation
-from src.petpptx.pkg import PPTXFileHandler
-from src.petpptx.coreprops import CoreProperties
+from src.petpptx.mixin_handler import MixinHandler
+from src.petpptx.pkg import PptxFileHandler
+from src.petpptx.core_props import CoreProperties
+from src.petpptx.relationship import Relationships
+from src.petpptx.slide import Slides, SlideMaster, SlideLayout, Theme
+from src.petpptx.schemas.presentation import Presentation as XmlPresentation
+from src.petpptx.schemas.view_pr import ViewPr as XmlViewProp
+from src.petpptx.schemas.presentation_pr import PresentationPr as XmlPresentationProp, Ext
+from src.petpptx.schemas.tbl_style_lst import TblStyleLst as XmlTableStyle
+
+
+class _PresentationBuilder:
+
+    @staticmethod
+    def create_model(part: MixinHandler):
+        model = XmlPresentation()
+
+        content_types = ContentTypes(part=part)
+
+        _rels = Relationships(file_path="/_rels/.rels", part=part)
+        _rels.add_target(type_value=EnumRelationshipType.OFFICE_DOCUMENT, target="/ppt/presentation.xml")
+        _rels.add_target(type_value=EnumRelationshipType.CORE_PROPERTIES, target="/docProps/core.xml")
+        _rels.add_target(type_value=EnumRelationshipType.EXTENDED_PROPERTIES, target="/docProps/app.xml")
+        _rels.add_target(type_value=EnumRelationshipType.THUMBNAIL, target="/docProps/thumbnail.jpeg")
+
+        core_props = CoreProperties(part=part)
+        app_props = AppProperties("/docProps/app.xml")
+
+        part.set_model(file_path=core_props._file_path, model=core_props.get_model())
+        part.set_model(file_path=app_props._file_path, model=app_props.get_model())
+        part.set_model(file_path=content_types._file_path, model=content_types.get_model())
+        part.set_model(file_path=_rels._file_path, model=_rels.get_model())
+
+        SlideMaster(part=part)
+        SlideLayout(part=part)
+        Theme(part=part)
+
+        ns_map = {
+            "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+            "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+            "p": "http://schemas.openxmlformats.org/presentationml/2006/main"
+        }
+        part.set_model(file_path="ppt/viewProps", model=XmlViewProp(), ns_map=ns_map)
+        part.set_model(file_path="ppt/presProps", model=XmlPresentationProp(), ns_map=ns_map)
+        part.set_model(file_path="ppt/tableStyles", model=XmlTableStyle)
+
+        return model
 
 
 class Presentation:
@@ -13,19 +61,27 @@ class Presentation:
     Not intended to be constructed directly. Use :func:`pptx.Presentation` to open or
     create a presentation.
     """
+
+    _schema: XmlPresentation = XmlPresentation
+    _file_path = "/ppt/presentation.xml"
+
     def __init__(self, io: Optional[str | PathLike] = None):
-        self._pkg = PPTXFileHandler(pptx_path=io)
-        self._pkg.load_file_map()
-        self._handler: PptxXmlHandler = PptxXmlHandler()
-        if io is None:
-            self._handler = create_minimal_presentation()
+        self._part = MixinHandler(pkg=PptxFileHandler(pptx_path=io), handler=PptxXmlHandler())
+
+        if self._part.has_model(file_path=self._file_path):
+            self._model = self._part.deserialize_model(file_path=self._file_path, schema=self._schema)
+        else:
+            self._model = self._part.set_model(file_path=self._file_path,
+                                               model=_PresentationBuilder.create_model(part=self._part))
+
+        self._rels = Relationships(file_path="ppt/_rels/presentation.xml.rels", part=self._part)
 
     def save(self, file_name: str | PathLike):
         """
         Save this presentation to *file_name*, where *file_name* can be either a path
         to a file (a string) or a file-like object.
         """
-        self._pkg.pack_pptx(target_file=file_name, other_map=self._handler.to_bytes())
+        self._part.save(file_name=file_name)
 
     @property
     def core_properties(self):
@@ -33,10 +89,7 @@ class Presentation:
         Instance of |CoreProperties| holding the read/write Dublin Core
         document properties for this presentation.
         """
-        blob = self._pkg.pop_file_by_path("docProps/core.xml")
-        self._handler.parse_xml(path_name=Path("docProps/core.xml"), blob=blob, schema=CoreProperties._schema)
-        return CoreProperties(path_name="docProps/core.xml",
-                              model=self._handler.get_model_by_path(Path("docProps/core.xml")))
+        return CoreProperties(part=self._part)
 
     @property
     def notes_master(self):
@@ -96,8 +149,9 @@ class Presentation:
     def slide_width(self, width):
         pass
 
+    @cached_property
     def slides(self):
         """
         |Slides| object containing the slides in this presentation.
         """
-        pass
+        return Slides(part=self._part, prs_model=self._model, prs_rels=self._rels)

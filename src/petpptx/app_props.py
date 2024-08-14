@@ -52,8 +52,8 @@ class _AppPropertiesBuilder:
 class AppProperties:
     _schema: SchemaProperties = SchemaProperties
 
-    def __init__(self, path_name: str, model: Optional[SchemaProperties] = None):
-        self._path_name = Path(path_name)
+    def __init__(self, file_path: str, model: Optional[SchemaProperties] = None):
+        self._file_path = Path(file_path)
         self._model = model
         if self._model is None:
             self._model = _AppPropertiesBuilder.get_model()
