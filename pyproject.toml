@@ -6,7 +6,7 @@ authors = [
     {name = "Sergei Malygin", email = "sedrew2010@gmail.com"},
 ]
 dependencies = [
-    "xsdata>=24.4",
+    "lxml>=5.2.1",
 ]
 
 #requires-python = ">=3.8.*"
@@ -19,6 +19,6 @@ distribution = false
 
 [tool.pdm.dev-dependencies]
 dev = [
-    "xsdata[cli]>=24.2.1",
-    "pytest"
+    "pytest",
+    "xsdata[cli]>=24.4",
 ]

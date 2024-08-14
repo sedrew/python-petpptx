@@ -3,9 +3,11 @@ from typing import List, Optional
 
 __NAMESPACE__ = "http://schemas.openxmlformats.org/package/2006/content-types"
 
+from src.petpptx.schemas.base_schema import BaseSchema
+
 
 @dataclass
-class Default:
+class Default(BaseSchema):
     class Meta:
         namespace = (
             "http://schemas.openxmlformats.org/package/2006/content-types"
@@ -30,7 +32,7 @@ class Default:
 
 
 @dataclass
-class Override:
+class Override(BaseSchema):
     class Meta:
         namespace = (
             "http://schemas.openxmlformats.org/package/2006/content-types"
@@ -55,7 +57,7 @@ class Override:
 
 
 @dataclass
-class Types:
+class Types(BaseSchema):
     class Meta:
         namespace = (
             "http://schemas.openxmlformats.org/package/2006/content-types"

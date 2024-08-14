@@ -87,6 +87,34 @@ class NotesSz:
 
 
 @dataclass
+class SldId:
+    class Meta:
+        name = "sldId"
+        namespace = (
+            "http://schemas.openxmlformats.org/presentationml/2006/main"
+        )
+
+    id: Optional[int] = field(
+        default=None,
+        metadata={
+            "type": "Attribute",
+            "required": True,
+        },
+    )
+    rid: Optional[
+        str
+    ] = field(
+        default=None,
+        metadata={
+            "name": "id",
+            "type": "Attribute",
+            "namespace": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+            "required": True,
+        },
+    )
+
+
+@dataclass
 class SldMasterId:
     class Meta:
         name = "sldMasterId"
@@ -156,6 +184,24 @@ class SolidFill:
         default=None,
         metadata={
             "name": "schemeClr",
+            "type": "Element",
+            "required": True,
+        },
+    )
+
+
+@dataclass
+class SldIdLst:
+    class Meta:
+        name = "sldIdLst"
+        namespace = (
+            "http://schemas.openxmlformats.org/presentationml/2006/main"
+        )
+
+    sld_id: Optional[list[SldId]] = field(
+        default=None,
+        metadata={
+            "name": "sldId",
             "type": "Element",
             "required": True,
         },
@@ -997,6 +1043,14 @@ class Presentation:
         default=None,
         metadata={
             "name": "sldMasterIdLst",
+            "type": "Element",
+            "required": True,
+        },
+    )
+    sld_id_lst: Optional[SldIdLst] = field(
+        default=None,
+        metadata={
+            "name": "sldIdLst",
             "type": "Element",
             "required": True,
         },

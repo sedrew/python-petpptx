@@ -1,1 +1,1 @@
-from .file_handler import PPTXFileHandler
+from .file_handler import PptxFileHandler

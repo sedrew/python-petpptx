@@ -11,7 +11,7 @@ class TblStyleLst:
         namespace = "http://schemas.openxmlformats.org/drawingml/2006/main"
 
     def_value: Optional[str] = field(
-        default=None,
+        default="{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}",
         metadata={
             "name": "def",
             "type": "Attribute",

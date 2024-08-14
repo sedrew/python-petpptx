@@ -322,7 +322,7 @@ class ViewPr:
         )
 
     normal_view_pr: Optional[NormalViewPr] = field(
-        default=None,
+        default=NormalViewPr(restored_left=RestoredLeft(sz=15620), restored_top=RestoredTop(sz=94660)),
         metadata={
             "name": "normalViewPr",
             "type": "Element",

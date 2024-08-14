@@ -91,7 +91,10 @@ class PresentationPr:
         )
 
     ext_lst: Optional[ExtLst] = field(
-        default=None,
+        default=ExtLst(ext=list([Ext(uri="{E76CE94A-603C-4142-B9EB-6D1370010A27}",
+                                     default_image_dpi=DefaultImageDpi(val=220)),
+                                Ext(uri="{D31A062A-798A-4329-ABDD-BBA856620510}",
+                                    discard_image_edit_data=DiscardImageEditData(val=0))])),
         metadata={
             "name": "extLst",
             "type": "Element",

@@ -3,9 +3,11 @@ from typing import List, Optional
 
 __NAMESPACE__ = "http://schemas.openxmlformats.org/package/2006/relationships"
 
+from src.petpptx.schemas.base_schema import BaseSchema
+
 
 @dataclass
-class Relationship:
+class Relationship(BaseSchema):
     class Meta:
         namespace = (
             "http://schemas.openxmlformats.org/package/2006/relationships"
@@ -38,7 +40,7 @@ class Relationship:
 
 
 @dataclass
-class Relationships:
+class Relationships(BaseSchema):
     class Meta:
         namespace = (
             "http://schemas.openxmlformats.org/package/2006/relationships"

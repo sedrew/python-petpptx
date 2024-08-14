@@ -1,29 +1,45 @@
 import io
+import tempfile
 from abc import ABC
 from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
 from pathlib import Path
 from typing import Optional, NewType
+import shutil
+
 
 PkgFileMap = NewType("PkgFileMap", dict[Path, bytes])
 
 
-class StructuredData(ABC):
-
-    def to_bytes(self) -> dict[Path, bytes | str]:
-        ...
+class PptxUnpackerInMemory:
+    pass
 
 
-class PPTXFileHandler:
+class PptxUnpackerInTemp:
 
-    def __init__(self, pptx_path=None, structure=StructuredData()):
+    def __init__(self):
+        self.temp_dir = tempfile.mkdtemp()
+
+    def get(self):
+        pass
+
+    def cleanup(self):
+        shutil.rmtree(self.temp_dir)
+
+
+class PptxFileHandler:
+
+    def __init__(self, pptx_path: Optional[Path | str] = None):
         self.pptx_path = pptx_path
-        self._file_map: PkgFileMap = PkgFileMap(dict())
+        self._file_map: PkgFileMap = self.load_file_map(pptx_path=pptx_path)
 
-    def load_file_map(self) -> dict[Path, ZipFile]:
+    @staticmethod
+    def load_file_map(pptx_path: Optional[Path | str] = None) -> PkgFileMap:
+        if pptx_path is None:
+            return PkgFileMap(dict())
         """Load a map of file names within the .pptx (ZIP) archive."""
-        with ZipFile(self.pptx_path, 'r') as zip_ref:
-            self._file_map = {Path(file.filename):  zip_ref.read(file) for file in zip_ref.infolist()}
-        return self._file_map
+        with ZipFile(pptx_path, 'r') as zip_ref:
+            file_map = PkgFileMap({Path(file.filename):  zip_ref.read(file) for file in zip_ref.infolist()})
+        return file_map
 
     def pack_pptx(self, target_file: str | Path, other_map: Optional[PkgFileMap] = None):
         if other_map is None:
@@ -33,7 +49,7 @@ class PPTXFileHandler:
             for path, el_blob in _structure_map.items():
                 new_zip.writestr(str(path), el_blob)
 
-    def pop_file_by_path(self, file_path: str | Path) -> Optional[ZipInfo]:
+    def pop_file_by_path(self, file_path: str | Path) -> Optional[bytes]:
         if isinstance(file_path, str):
             file_path = Path(file_path)
         return self._file_map.pop(file_path, None)
